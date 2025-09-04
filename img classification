@@ -1,0 +1,104 @@
+import tensorflow as tf
+from tensorflow import keras
+from keras.datasets import mnist
+from keras.layers import Conv2D, Flatten, Dense
+from keras.models import Sequential
+import numpy as np
+import numpy.random as nr
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+
+# Number of classes
+nc = 10  
+
+# Load MNIST dataset
+(Xtrain, ytrain), (Xtest, ytest) = mnist.load_data()
+
+# Show random training images
+plt.figure(1)
+plt.imshow(Xtrain[nr.randint(60000)])
+plt.show()
+
+plt.figure(2)
+plt.imshow(Xtrain[nr.randint(60000)])
+plt.show()
+
+plt.figure(3)
+plt.imshow(Xtrain[nr.randint(60000)])
+plt.show()
+
+plt.figure(4)
+plt.imshow(Xtrain[nr.randint(60000)])
+plt.show()
+
+# Reshape for CNN (28x28x1)
+Xtrain = Xtrain.reshape(60000, 28, 28, 1)
+Xtest = Xtest.reshape(10000, 28, 28, 1)
+
+# Normalize pixel values
+Xtrain = Xtrain.astype("float32") / 255.0
+Xtest = Xtest.astype("float32") / 255.0
+
+# One-hot encode labels
+ytrainEnc = tf.one_hot(ytrain, depth=nc)
+ytestEnc = tf.one_hot(ytest, depth=nc)
+
+# Build CNN model
+model = Sequential()
+model.add(Conv2D(64, kernel_size=3, activation="relu", input_shape=(28,28,1)))
+model.add(Conv2D(32, kernel_size=3, activation="relu"))
+model.add(Flatten())
+model.add(Dense(10, activation="softmax"))
+
+model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
+
+# Train model
+history = model.fit(Xtrain, ytrainEnc, validation_data=(Xtest, ytestEnc), epochs=3)
+
+# Predictions
+ypred = model.predict(Xtest)
+ypred = np.argmax(ypred, axis=1)
+
+# Accuracy
+score = accuracy_score(ytest, ypred)
+print("Accuracy score is", 100*score, "%")
+
+# Confusion Matrix
+cmat = confusion_matrix(ytest, ypred)
+print("Confusion matrix of Neural Network is \n", cmat, '\n')
+
+disp = ConfusionMatrixDisplay(confusion_matrix=cmat)
+disp.plot()
+plt.show()
+
+# Plot Training Loss
+plt.plot(range(1, len(history.history['loss']) + 1), history.history['loss'], 'g.-', linewidth=3)
+plt.xlabel('Epochs')
+plt.ylabel('Training Crossentropy')
+plt.grid(1, which='both')
+plt.suptitle('Training Loss vs Epochs')
+plt.show()
+
+# Plot Training Accuracy
+plt.plot(range(1, len(history.history['accuracy']) + 1), history.history['accuracy'], 'b.-', linewidth=3)
+plt.xlabel('Epochs')
+plt.ylabel('Training Accuracy')
+plt.grid(1, which='both')
+plt.suptitle('Training Accuracy vs Epochs')
+plt.show()
+
+# Plot Validation Loss
+plt.plot(range(1, len(history.history['val_loss']) + 1), history.history['val_loss'], 'g.-', linewidth=3)
+plt.xlabel('Epochs')
+plt.ylabel('Validation Crossentropy')
+plt.grid(1, which='both')
+plt.suptitle('Validation Loss vs Epochs')
+plt.show()
+
+# Plot Validation Accuracy
+plt.plot(range(1, len(history.history['val_accuracy']) + 1), history.history['val_accuracy'], 'b.-', linewidth=3)
+plt.xlabel('Epochs')
+plt.ylabel('Validation Accuracy')
+plt.grid(1, which='both')
+plt.suptitle('Validation Accuracy vs Epochs')
+plt.show()    
